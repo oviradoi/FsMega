@@ -1,0 +1,5 @@
+[plugininstall]
+description=FsMega
+type=wfx
+file=FsMega.wfx
+defaultdir=FsMega
