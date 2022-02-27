@@ -2,7 +2,6 @@
 #include "FsMega.h"
 #include "utils.h"
 
-#include <pathcch.h>
 #include <algorithm>
 
 #include "AboutDialog.h"
@@ -325,7 +324,7 @@ void CFsMega::SetDefaultIniFilename(const char* defaultIniName)
 	WCHAR fullIniPath[MAX_PATH];
 	MultiByteToWideChar(CP_ACP, NULL, defaultIniName, MAX_PATH, fullIniPath, MAX_PATH);
 	PathRemoveFileSpec(fullIniPath);
-	PathCchCombine(fullIniPath, MAX_PATH, fullIniPath, DefaultIniFilename);
+	PathCombine(fullIniPath, fullIniPath, DefaultIniFilename);
 	_iniPath = fullIniPath;
 }
 

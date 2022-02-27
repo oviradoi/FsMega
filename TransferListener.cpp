@@ -105,7 +105,7 @@ void TransferListener::onTransferFinish(MegaApi* api, MegaTransfer* transfer, Me
 	_cancelled = transfer->getState() == MegaTransfer::STATE_CANCELLED;
 	_readError = error->getErrorCode() == MegaError::API_EREAD;
 	_writeError = error->getErrorCode() == MegaError::API_EWRITE;
-	OutputDebugFormat(_T("FsMega: onTransferFinish %ld listener %p\n"), this);
+	OutputDebugFormat(_T("FsMega: onTransferFinish listener %p\n"), this);
 	UpdateProgress(100);
 	SetEvent(_finishedEvent);
 }
