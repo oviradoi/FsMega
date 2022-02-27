@@ -10,7 +10,7 @@ using namespace mega;
 
 TransferListener::TransferListener(tProgressProcW progressProc, int pluginNr, WCHAR* localName, WCHAR* remoteName)
 {
-	OutputDebugFormat(_T("Creating transfer listener %p\n"), this);
+	OutputDebugFormat(_T("FsMega: Creating transfer listener %p\n"), this);
 	
 	_progressEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
 	_finishedEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr);
@@ -30,7 +30,7 @@ TransferListener::TransferListener(tProgressProcW progressProc, int pluginNr, WC
 
 TransferListener::~TransferListener()
 {
-	OutputDebugFormat(_T("Destroying transfer listener %p\n"), this);
+	OutputDebugFormat(_T("FsMega: Destroying transfer listener %p\n"), this);
 	CloseHandle(_progressEvent);
 	CloseHandle(_finishedEvent);
 }
@@ -87,7 +87,7 @@ void TransferListener::onTransferStart(MegaApi* api, MegaTransfer* transfer)
 	_transferTag = transfer->getTag();
 	UpdateProgress(0);
 
-	OutputDebugFormat(_T("onTransferStart listener %p\n"), this);
+	OutputDebugFormat(_T("FsMega: onTransferStart listener %p\n"), this);
 }
 
 void TransferListener::onTransferUpdate(MegaApi* api, MegaTransfer* transfer)
@@ -105,7 +105,7 @@ void TransferListener::onTransferFinish(MegaApi* api, MegaTransfer* transfer, Me
 	_cancelled = transfer->getState() == MegaTransfer::STATE_CANCELLED;
 	_readError = error->getErrorCode() == MegaError::API_EREAD;
 	_writeError = error->getErrorCode() == MegaError::API_EWRITE;
-	OutputDebugFormat(_T("onTransferFinish %ld listener %p\n"), this);
+	OutputDebugFormat(_T("FsMega: onTransferFinish %ld listener %p\n"), this);
 	UpdateProgress(100);
 	SetEvent(_finishedEvent);
 }
@@ -114,6 +114,6 @@ void TransferListener::UpdateProgress(int newProgress)
 {
 	_progress = max(_progress, newProgress);
 
-	OutputDebugFormat(_T("Update progress %p\n"), this);
+	OutputDebugFormat(_T("FsMega: Update progress %p\n"), this);
 	SetEvent(_progressEvent);
 }

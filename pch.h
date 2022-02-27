@@ -16,6 +16,8 @@
 #include "tchar.h"
 #include "debugapi.h"
 
+#include <windowsx.h>
+
 #include "fsplugin.h"
 
 #include "megaapi.h"

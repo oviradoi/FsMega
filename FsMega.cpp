@@ -2,8 +2,11 @@
 #include "FsMega.h"
 #include "utils.h"
 
+#include <pathcch.h>
 #include <algorithm>
 
+#include "AboutDialog.h"
+#include "LoginDialog.h"
 #include "RequestListener.h"
 #include "resource.h"
 #include "TransferListener.h"
@@ -11,13 +14,16 @@
 using namespace std;
 using namespace mega;
 
-CFsMega::CFsMega() :_megaApi(MEGA_API_KEY)
+const TCHAR DefaultIniFilename[MAX_PATH] = _T("FsMega.ini");
+
+CFsMega::CFsMega() : _megaApi(MEGA_API_KEY)
 {
 	_pluginInstance = nullptr;
 	_pluginNr = -1;
 	_progressProc = nullptr;
 	_logProc = nullptr;
 	_requestProc = nullptr;
+	_iniPath = DefaultIniFilename;
 }
 
 void CFsMega::Init(HINSTANCE pluginInstance, int pluginNr, tProgressProcW progressProc, tLogProcW logProc, tRequestProcW requestProc)
@@ -27,25 +33,25 @@ void CFsMega::Init(HINSTANCE pluginInstance, int pluginNr, tProgressProcW progre
 	_progressProc = progressProc;
 	_logProc = logProc;
 	_requestProc = requestProc;
+
+	MegaProxy* mp = _megaApi.getAutoProxySettings();
+	_megaApi.setProxySettings(mp);
+	delete mp;
 }
 
 void CFsMega::Connect()
 {
-	WCHAR wcUsername[MAX_PATH];
-	WCHAR wcPassword[MAX_PATH];
-	wcUsername[0] = 0;
-	wcPassword[0] = 0;
-	
-	const BOOL hasUsername = _requestProc(_pluginNr, RT_UserName, nullptr, nullptr, wcUsername, MAX_PATH);
-	const BOOL hasPassword = hasUsername && _requestProc(_pluginNr, RT_Password, nullptr, nullptr, wcPassword, MAX_PATH);
+	HWND mainWnd = GetActiveWindow();
+	CLoginDialog loginDialog(_pluginInstance, _iniPath, _pluginNr, _cryptProc, _cryptoNr, _cryptoFlags);
+	INT_PTR result = loginDialog.ShowLoginDialog(mainWnd);
 
-	if (!hasUsername || !hasPassword)
+	if (result != IDOK)
 	{
 		return;
 	}
 
-	const string username = WideCharToUtf8(wcUsername);
-	const string password = WideCharToUtf8(wcPassword);
+	const string username = WideCharToUtf8(loginDialog.GetUsername());
+	const string password = WideCharToUtf8(loginDialog.GetPassword());
 
 	RequestListener loginListener(_progressProc, _pluginNr);
 	_megaApi.login(username.c_str(), password.c_str(), &loginListener);
@@ -306,4 +312,26 @@ int CFsMega::RenameMove(WCHAR* oldName, WCHAR* newName, bool move, bool overwrit
 	LogMessage(MSGTYPE_OPERATIONCOMPLETE, _T("Rename/move complete: %s -> %s"), oldName, newName);
 
 	return listener.HasError() ? FS_FILE_WRITEERROR : FS_FILE_OK;
+}
+
+void CFsMega::ShowAboutDialog(HWND mainWnd)
+{
+	CAboutDialog aboutDialog(_pluginInstance, ConstCharToWstring(_megaApi.getVersion()));
+	aboutDialog.ShowAboutDialog(mainWnd);
+}
+
+void CFsMega::SetDefaultIniFilename(const char* defaultIniName)
+{
+	WCHAR fullIniPath[MAX_PATH];
+	MultiByteToWideChar(CP_ACP, NULL, defaultIniName, MAX_PATH, fullIniPath, MAX_PATH);
+	PathRemoveFileSpec(fullIniPath);
+	PathCchCombine(fullIniPath, MAX_PATH, fullIniPath, DefaultIniFilename);
+	_iniPath = fullIniPath;
+}
+
+void CFsMega::SetCryptCallback(tCryptProcW pCryptProc, int cryptoNr, int cryptoFlags)
+{
+	_cryptProc = pCryptProc;
+	_cryptoNr = cryptoNr;
+	_cryptoFlags = cryptoFlags;
 }

@@ -3,6 +3,8 @@
 #include "resource.h"
 
 #include "FsMega.h"
+#include "FsMegaLogger.h"
+#include "utils.h"
 
 //FsMegaLogger megaLogger;
 CFsMega* fsMega = nullptr;
@@ -109,4 +111,25 @@ HANDLE __stdcall FsFindFirst(char* Path, WIN32_FIND_DATA* FindData)
 BOOL __stdcall FsFindNext(HANDLE Hdl, WIN32_FIND_DATA* FindData)
 {
     return FALSE;
+}
+
+int __stdcall FsExecuteFileW(HWND MainWin, WCHAR* RemoteName, WCHAR* Verb)
+{
+    std::wstring verb(Verb);
+    if (verb == std::wstring(_T("properties")))
+    {
+        fsMega->ShowAboutDialog(MainWin);
+        return FS_EXEC_OK;
+    }
+    return FS_EXEC_YOURSELF;
+}
+
+void __stdcall FsSetDefaultParams(FsDefaultParamStruct* dps)
+{
+    fsMega->SetDefaultIniFilename(dps->DefaultIniName);
+}
+
+void __stdcall FsSetCryptCallbackW(tCryptProcW pCryptProcW, int CryptoNr, int Flags)
+{
+    fsMega->SetCryptCallback(pCryptProcW, CryptoNr, Flags);
 }

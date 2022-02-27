@@ -11,7 +11,7 @@ using namespace mega;
 
 RequestListener::RequestListener(tProgressProcW progressProc, int pluginNr)
 {
-	OutputDebugFormat(_T("Creating request listener %p\n"), this);
+	OutputDebugFormat(_T("FsMega: Creating request listener %p\n"), this);
 	_errorCode = 0;	
 	_finishedEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr);
 	_progressEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
@@ -22,7 +22,7 @@ RequestListener::RequestListener(tProgressProcW progressProc, int pluginNr)
 
 RequestListener::~RequestListener()
 {
-	OutputDebugFormat(_T("Destroying request listener %p\n"), this);
+	OutputDebugFormat(_T("FsMega: Destroying request listener %p\n"), this);
 	CloseHandle(_finishedEvent);
 	CloseHandle(_progressEvent);
 }
@@ -52,12 +52,12 @@ bool RequestListener::HasError() const
 
 void RequestListener::onRequestStart(MegaApi* api, MegaRequest* request)
 {
-	OutputDebugFormat(_T("onRequestStart type=%d\n"), request->getType());
+	OutputDebugFormat(_T("FsMega: onRequestStart type=%d\n"), request->getType());
 }
 
 void RequestListener::onRequestUpdate(MegaApi* api, MegaRequest* request)
 {
-	OutputDebugFormat(_T("onRequestUpdate type=%d\n"), request->getType());
+	OutputDebugFormat(_T("FsMega: onRequestUpdate type=%d\n"), request->getType());
 	const double trans = static_cast<double>(request->getTransferredBytes());
 	const double total = static_cast<double>(request->getTotalBytes());
 	const int progress = static_cast<int>(100. * trans / total);
@@ -69,7 +69,8 @@ void RequestListener::onRequestFinish(MegaApi* api, MegaRequest* request, MegaEr
 {
 	const int type = request->getType();
 	_errorCode = e->getErrorCode();
-	OutputDebugFormat(_T("onRequestFinish type=%d error=%d\n"), type, _errorCode);
+	std::wstring errorString = ConstCharToWstring(e->getErrorString());
+	OutputDebugFormat(_T("FsMega: onRequestFinish type=%d errorCode=%d errorString=%s\n"), type, _errorCode, errorString.c_str());
 	SetEvent(_finishedEvent);
 }
 
@@ -77,6 +78,6 @@ void RequestListener::UpdateProgress(int newProgress)
 {
 	_progress = max(_progress, newProgress);
 
-	OutputDebugFormat(_T("Update progress %p\n"), this);
+	OutputDebugFormat(_T("FsMega: Update progress %p\n"), this);
 	SetEvent(_progressEvent);
 }
