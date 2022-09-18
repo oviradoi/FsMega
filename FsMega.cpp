@@ -15,7 +15,7 @@ using namespace mega;
 
 const TCHAR DefaultIniFilename[MAX_PATH] = _T("FsMega.ini");
 
-CFsMega::CFsMega() : _megaApi(MEGA_API_KEY)
+CFsMega::CFsMega()
 {
 	_pluginInstance = nullptr;
 	_pluginNr = -1;
@@ -23,6 +23,26 @@ CFsMega::CFsMega() : _megaApi(MEGA_API_KEY)
 	_logProc = nullptr;
 	_requestProc = nullptr;
 	_iniPath = DefaultIniFilename;
+	_megaApi = nullptr;
+}
+
+CFsMega::~CFsMega()
+{
+	if (_megaApi != nullptr)
+	{
+		delete _megaApi;
+		_megaApi = nullptr;
+	}
+}
+
+void CFsMega::InitializeMegaApi()
+{
+	if (_megaApi != nullptr)
+	{
+		delete _megaApi;
+		_megaApi = nullptr;
+	}
+	_megaApi = new MegaApi(MEGA_API_KEY);
 }
 
 void CFsMega::Init(HINSTANCE pluginInstance, int pluginNr, tProgressProcW progressProc, tLogProcW logProc, tRequestProcW requestProc)
@@ -33,9 +53,7 @@ void CFsMega::Init(HINSTANCE pluginInstance, int pluginNr, tProgressProcW progre
 	_logProc = logProc;
 	_requestProc = requestProc;
 
-	MegaProxy* mp = _megaApi.getAutoProxySettings();
-	_megaApi.setProxySettings(mp);
-	delete mp;
+	InitializeMegaApi();
 }
 
 void CFsMega::Connect()
@@ -53,49 +71,61 @@ void CFsMega::Connect()
 	const string password = WideCharToUtf8(loginDialog.GetPassword());
 
 	RequestListener loginListener(_progressProc, _pluginNr);
-	_megaApi.login(username.c_str(), password.c_str(), &loginListener);
+	_megaApi->login(username.c_str(), password.c_str(), &loginListener);
 	loginListener.WaitAndNotify();
-	if (loginListener.HasError())
+	if (loginListener.HasError() || loginListener.WasAborted())
 	{
 		const wstring pluginName = GetStringResource(_pluginInstance, IDS_PLUGINNAME);
 		const wstring loginError = GetStringResource(_pluginInstance, IDS_LOGINERROR);
 		MessageBox(GetActiveWindow(), loginError.c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
+		LogMessage(MSGTYPE_IMPORTANTERROR, loginError.c_str());
+		InitializeMegaApi();
 	}
 	else
 	{
-		LogMessage(MSGTYPE_CONNECT, _T("CONNECT /"));
-
 		RequestListener fetchNodesListener(_progressProc, _pluginNr);
-		_megaApi.fetchNodes(&fetchNodesListener);
+		_megaApi->fetchNodes(&fetchNodesListener);
 		fetchNodesListener.WaitAndNotify();
 
-		LogMessage(MSGTYPE_CONNECTCOMPLETE, _T("Connected"));
+		if (fetchNodesListener.HasError() || fetchNodesListener.WasAborted())
+		{
+			const wstring pluginName = GetStringResource(_pluginInstance, IDS_PLUGINNAME);
+			const wstring fetchNodesError = GetStringResource(_pluginInstance, IDS_FETCHNODESERROR);
+			MessageBox(GetActiveWindow(), fetchNodesError.c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
+			LogMessage(MSGTYPE_IMPORTANTERROR, fetchNodesError.c_str());
+			InitializeMegaApi();
+		}
+		else
+		{
+			LogMessage(MSGTYPE_CONNECT, _T("CONNECT /"));
+		}
 	}
 }
 
 void CFsMega::Disconnect()
 {
 	RequestListener logoutListener(_progressProc, _pluginNr);
-	_megaApi.logout(&logoutListener);
+	_megaApi->logout(&logoutListener);
 	logoutListener.WaitAndNotify();
 	LogMessage(MSGTYPE_DISCONNECT, _T("Disconnected"));
 }
 
 Enumerator* CFsMega::GetEnumerator(WCHAR* path)
 {
-	if (!_megaApi.isLoggedIn())
+	if (!_megaApi->isLoggedIn())
 	{
 		Connect();
 	}
-	if (_megaApi.isLoggedIn())
+
+	if (_megaApi->isLoggedIn())
 	{
 		LogMessage(MSGTYPE_DETAILS, _T("LIST %s"), path);
 
 		const string megaPath = LocalPathToMegaPath(path);
-		MegaNode* node = _megaApi.getNodeByPath(megaPath.c_str());
+		MegaNode* node = _megaApi->getNodeByPath(megaPath.c_str());
 		if (node != nullptr)
 		{
-			MegaNodeList* children = _megaApi.getChildren(node);
+			MegaNodeList* children = _megaApi->getChildren(node);
 			return new Enumerator(children);
 		}
 	}
@@ -110,7 +140,7 @@ BOOL CFsMega::MkDir(WCHAR* path)
 	if (parent)
 	{
 		RequestListener createFolderListener(_progressProc, _pluginNr);
-		_megaApi.createFolder(strName.c_str(), parent.get(), &createFolderListener);
+		_megaApi->createFolder(strName.c_str(), parent.get(), &createFolderListener);
 		createFolderListener.WaitAndNotify();
 
 		LogMessage(MSGTYPE_OPERATIONCOMPLETE, _T("MKDIR %s"), path);
@@ -124,11 +154,11 @@ BOOL CFsMega::MkDir(WCHAR* path)
 BOOL CFsMega::Delete(WCHAR* path)
 {
 	const string str = LocalPathToMegaPath(path);
-	const unique_ptr<MegaNode> node(_megaApi.getNodeByPath(str.c_str()));
+	const unique_ptr<MegaNode> node(_megaApi->getNodeByPath(str.c_str()));
 	if (node)
 	{
 		RequestListener deleteListener(_progressProc, _pluginNr);
-		_megaApi.remove(node.get(), &deleteListener);
+		_megaApi->remove(node.get(), &deleteListener);
 		deleteListener.WaitAndNotify();
 
 		LogMessage(MSGTYPE_OPERATIONCOMPLETE, _T("DELETE %s"), path);
@@ -142,7 +172,7 @@ BOOL CFsMega::Delete(WCHAR* path)
 bool CFsMega::FileExists(WCHAR* path)
 {
 	const string str = LocalPathToMegaPath(path);
-	const unique_ptr<MegaNode> node(_megaApi.getNodeByPath(str.c_str()));
+	const unique_ptr<MegaNode> node(_megaApi->getNodeByPath(str.c_str()));
 	return node != nullptr;
 }
 
@@ -155,7 +185,7 @@ unique_ptr<MegaNode> CFsMega::GetParentNode(WCHAR* path)
 
 	const string strPath = LocalPathToMegaPath(wcPath);
 
-	return unique_ptr<MegaNode>(_megaApi.getNodeByPath(strPath.c_str()));
+	return unique_ptr<MegaNode>(_megaApi->getNodeByPath(strPath.c_str()));
 }
 
 void CFsMega::LogMessage(int msgType, const WCHAR* format, ...) const
@@ -183,7 +213,7 @@ int CFsMega::UploadFile(WCHAR* localName, WCHAR* remoteName, int copyFlags)
 	if (parent)
 	{
 		TransferListener listener(_progressProc, _pluginNr, localName, remoteName);
-		_megaApi.startUpload(strLocalName.c_str(), parent.get(), strRemoteName.c_str(), &listener);
+		_megaApi->startUpload(strLocalName.c_str(), parent.get(), strRemoteName.c_str(), -1, nullptr, false, false, nullptr, &listener);
 		listener.WaitAndNotify();
 		if (listener.WasCancelled())
 		{
@@ -228,11 +258,11 @@ int CFsMega::DownloadFile(WCHAR* localName, WCHAR* remoteName, int copyFlags)
 	const string strLocalName = WideCharToUtf8(localName);
 	const string strRemoteName = LocalPathToMegaPath(remoteName);
 
-	const unique_ptr<MegaNode> node(_megaApi.getNodeByPath(strRemoteName.c_str()));
+	const unique_ptr<MegaNode> node(_megaApi->getNodeByPath(strRemoteName.c_str()));
 	if (node)
 	{
 		TransferListener listener(_progressProc, _pluginNr, localName, remoteName);
-		_megaApi.startDownload(node.get(), strLocalName.c_str(), &listener);
+		_megaApi->startDownload(node.get(), strLocalName.c_str(), nullptr, nullptr, false, nullptr, &listener);
 		listener.WaitAndNotify();
 
 		if (listener.WasCancelled())
@@ -273,7 +303,7 @@ int CFsMega::RenameMove(WCHAR* oldName, WCHAR* newName, bool move, bool overwrit
 	}
 
 	const string strOldName = LocalPathToMegaPath(oldName);
-	const unique_ptr<MegaNode> oldNode(_megaApi.getNodeByPath(strOldName.c_str()));
+	const unique_ptr<MegaNode> oldNode(_megaApi->getNodeByPath(strOldName.c_str()));
 	const string strNewName = GetUtf8FileNameFromPath(newName);
 	const unique_ptr<MegaNode> oldParent(GetParentNode(oldName));
 	const unique_ptr<MegaNode> newParent(GetParentNode(newName));
@@ -294,16 +324,16 @@ int CFsMega::RenameMove(WCHAR* oldName, WCHAR* newName, bool move, bool overwrit
 	{
 		if (oldParent->getHandle() == newParent->getHandle())
 		{
-			_megaApi.renameNode(oldNode.get(), strNewName.c_str(), &listener);
+			_megaApi->renameNode(oldNode.get(), strNewName.c_str(), &listener);
 		}
 		else
 		{
-			_megaApi.moveNode(oldNode.get(), newParent.get(), strNewName.c_str(), &listener);
+			_megaApi->moveNode(oldNode.get(), newParent.get(), strNewName.c_str(), &listener);
 		}
 	}
 	else
 	{
-		_megaApi.copyNode(oldNode.get(), newParent.get(), strNewName.c_str(), &listener);
+		_megaApi->copyNode(oldNode.get(), newParent.get(), strNewName.c_str(), &listener);
 	}
 
 	listener.WaitAndNotify();
@@ -315,7 +345,7 @@ int CFsMega::RenameMove(WCHAR* oldName, WCHAR* newName, bool move, bool overwrit
 
 void CFsMega::ShowAboutDialog(HWND mainWnd)
 {
-	CAboutDialog aboutDialog(_pluginInstance, ConstCharToWstring(_megaApi.getVersion()));
+	CAboutDialog aboutDialog(_pluginInstance, ConstCharToWstring(_megaApi->getVersion()));
 	aboutDialog.ShowAboutDialog(mainWnd);
 }
 

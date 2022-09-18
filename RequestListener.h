@@ -11,13 +11,15 @@ public:
 	RequestListener& operator=(const RequestListener&&) = delete;
 	~RequestListener() override;
 
-	void WaitAndNotify() const;
+	void WaitAndNotify();
 	bool HasError() const;
+	bool WasAborted() const;
 
 private:
 	void onRequestStart(mega::MegaApi* api, mega::MegaRequest* request) override;
 	void onRequestUpdate(mega::MegaApi* api, mega::MegaRequest* request) override;
 	void onRequestFinish(mega::MegaApi* api, mega::MegaRequest* request, mega::MegaError* e) override;
+	void onRequestTemporaryError(mega::MegaApi* api, mega::MegaRequest* request, mega::MegaError* error) override;
 	void UpdateProgress(int newProgress);
 
 private:
@@ -26,6 +28,8 @@ private:
 	tProgressProcW _progressProc;
 	int _pluginNr;
 	int _errorCode;
+	bool _aborted;
+	std::wstring _errorMessage;
 	volatile int _progress;
 };
 

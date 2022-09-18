@@ -7,6 +7,7 @@ class CFsMega final
 {
 public:
 	CFsMega();
+	~CFsMega();
 	CFsMega(CFsMega&) = delete;
 	CFsMega(CFsMega&&) = delete;
 	CFsMega& operator=(const CFsMega&) = delete;
@@ -26,11 +27,11 @@ public:
 	void SetCryptCallback(tCryptProcW pCryptProc, int cryptoNr, int cryptoFlags);
 
 private:
+	void InitializeMegaApi();
 	void Connect();
 	bool FileExists(WCHAR* path);
 	std::unique_ptr<mega::MegaNode> GetParentNode(WCHAR* path);
 	void LogMessage(int msgType, const WCHAR* format, ...) const;
-	static INT_PTR CALLBACK AboutDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lparam);
 
 private:
 	HINSTANCE _pluginInstance;
@@ -43,5 +44,5 @@ private:
 	tRequestProcW _requestProc;
 	std::wstring _iniPath;
 
-	mega::MegaApi _megaApi;
+	mega::MegaApi* _megaApi;
 };

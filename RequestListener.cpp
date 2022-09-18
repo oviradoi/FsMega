@@ -18,6 +18,7 @@ RequestListener::RequestListener(tProgressProcW progressProc, int pluginNr)
 	_progressProc = progressProc;
 	_pluginNr = pluginNr;
 	_progress = 0;
+	_aborted = false;
 }
 
 RequestListener::~RequestListener()
@@ -27,7 +28,7 @@ RequestListener::~RequestListener()
 	CloseHandle(_progressEvent);
 }
 
-void RequestListener::WaitAndNotify() const
+void RequestListener::WaitAndNotify()
 {
 	HANDLE handles[] = { _finishedEvent, _progressEvent };
 
@@ -40,7 +41,14 @@ void RequestListener::WaitAndNotify() const
 		}
 		else if (result == WAIT_OBJECT_0 + 1 || result == WAIT_TIMEOUT)
 		{
-			_progressProc(_pluginNr, const_cast<WCHAR*>(_T("\\")), const_cast<WCHAR*>(_T("\\")), _progress);
+			std::wstring message = _errorMessage.empty() ? _T("\\") : _errorMessage.c_str();
+			const int wantToAbort = _progressProc(_pluginNr, const_cast<WCHAR*>(message.c_str()), const_cast<WCHAR*>(_T("\\")), _progress);
+			if (wantToAbort)
+			{
+				OutputDebugFormat(_T("FsMega: Aborting request in listener %p\n"), this);
+				_aborted = true;
+				SetEvent(_finishedEvent);
+			}
 		}
 	}
 }
@@ -48,6 +56,11 @@ void RequestListener::WaitAndNotify() const
 bool RequestListener::HasError() const
 {
 	return _errorCode != 0;
+}
+
+bool RequestListener::WasAborted() const
+{
+	return _aborted;
 }
 
 void RequestListener::onRequestStart(MegaApi* api, MegaRequest* request)
@@ -72,6 +85,16 @@ void RequestListener::onRequestFinish(MegaApi* api, MegaRequest* request, MegaEr
 	std::wstring errorString = ConstCharToWstring(e->getErrorString());
 	OutputDebugFormat(_T("FsMega: onRequestFinish type=%d errorCode=%d errorString=%s\n"), type, _errorCode, errorString.c_str());
 	SetEvent(_finishedEvent);
+}
+
+void RequestListener::onRequestTemporaryError(MegaApi* api, MegaRequest* request, MegaError* error)
+{
+	const int type = request->getType();
+	const int retry = request->getNumRetry();
+	_errorCode = error->getErrorCode();
+	_errorMessage = ConstCharToWstring(error->getErrorString());
+	OutputDebugFormat(_T("FsMega: onRequestTemporaryError type=%d errorCode=%d errorString=%s retry=%d\n"), type, _errorCode, _errorMessage.c_str(), retry);
+	SetEvent(_progressEvent);
 }
 
 void RequestListener::UpdateProgress(int newProgress)

@@ -61,8 +61,8 @@ IDI_MEGA                ICON                    "mega.ico"
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,2,0,0
- PRODUCTVERSION 1,2,0,0
+ FILEVERSION 1,3,0,0
+ PRODUCTVERSION 1,3,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -164,6 +164,7 @@ BEGIN
     IDS_ABOUTCAPTION        "{:s} plugin"
     IDS_ABOUTVERSION        "Version {:d}.{:d}.{:d}.{:d}"
     IDS_BUILTUSING          "Built using libmega version {:s}"
+    IDS_FETCHNODESERROR     "Fetch nodes error"
 END
 
 #endif    // English (United States) resources

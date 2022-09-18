@@ -49,10 +49,10 @@ void CAboutDialog::InitDialog(HWND hDlg)
 	wstring caption = GetStringResource(_pluginInstance, IDS_ABOUTCAPTION);
 	wstring title = GetStringResource(_pluginInstance, IDS_ABOUTTITLE);
 	// Format caption
-	wstring formattedCaption = format(caption, pluginName);
+	wstring formattedCaption = vformat(caption, make_wformat_args(pluginName));
 	SetDlgItemText(hDlg, IDC_STATIC_CAPTION, formattedCaption.c_str());
 	// Format title
-	wstring formattedTitle = format(title, formattedCaption);
+	wstring formattedTitle = vformat(title, make_wformat_args(formattedCaption));
 	SetWindowText(hDlg, formattedTitle.c_str());
 	// Load icon
 	HICON hIcon = (HICON)LoadImage(_pluginInstance, MAKEINTRESOURCE(IDI_MEGA), IMAGE_ICON, 0, 0, LR_DEFAULTCOLOR | LR_DEFAULTSIZE | LR_SHARED);
@@ -83,7 +83,7 @@ void CAboutDialog::SetVersionString(HWND hDlg)
 			auto v4 = LOWORD(pFixInfo->dwFileVersionLS);
 
 			wstring moduleVersion = GetStringResource(_pluginInstance, IDS_ABOUTVERSION);
-			wstring formattedVersion = format(moduleVersion, v1, v2, v3, v4);
+			wstring formattedVersion = vformat(moduleVersion, make_wformat_args(v1, v2, v3, v4));
 
 			SetDlgItemText(hDlg, IDC_STATIC_VERSION, formattedVersion.c_str());
 		}
@@ -95,7 +95,7 @@ void CAboutDialog::SetVersionString(HWND hDlg)
 void CAboutDialog::SetBuiltUsingString(HWND hDlg)
 {
 	wstring builtUsing = GetStringResource(_pluginInstance, IDS_BUILTUSING);
-	wstring formattedBuiltUsing = format(builtUsing, _megaVersion);
+	wstring formattedBuiltUsing = vformat(builtUsing, make_wformat_args(_megaVersion));
 
 	SetDlgItemText(hDlg, IDC_STATIC_BUILTUSING, formattedBuiltUsing.c_str());
 }

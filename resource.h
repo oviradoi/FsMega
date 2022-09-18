@@ -11,6 +11,7 @@
 #define IDS_ABOUTCAPTION                106
 #define IDS_ABOUTVERSION                107
 #define IDS_BUILTUSING                  108
+#define IDS_FETCHNODESERROR             109
 #define IDC_STATIC_CAPTION              1001
 #define IDC_STATIC_VERSION              1002
 #define IDC_STATIC_BUILTUSING           1003
