@@ -12,15 +12,18 @@
 #define IDS_ABOUTVERSION                107
 #define IDS_BUILTUSING                  108
 #define IDS_FETCHNODESERROR             109
+#define IDS_LOGINERRORDETAIL            110
 #define IDC_STATIC_CAPTION              1001
 #define IDC_STATIC_VERSION              1002
 #define IDC_STATIC_BUILTUSING           1003
 #define IDC_STATIC_USERNAME             1004
 #define IDC_COMBO_USERNAME              1005
 #define IDC_STATIC_PASSWORD             1006
+#define IDC_STATIC_MULTIFACTORKEY       1007
 #define IDC_EDIT_PASSWORD               1008
 #define IDC_CHECK1                      1009
 #define IDC_REMEMBER                    1009
+#define IDC_EDIT_MULTIFACTORKEY         1010
 
 // Next default values for new objects
 // 
@@ -28,7 +31,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        108
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1010
+#define _APS_NEXT_CONTROL_VALUE         1011
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

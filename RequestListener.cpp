@@ -63,6 +63,11 @@ bool RequestListener::WasAborted() const
 	return _aborted;
 }
 
+std::wstring RequestListener::GetErrorMessage() const
+{
+	return _errorMessage;
+}
+
 void RequestListener::onRequestStart(MegaApi* api, MegaRequest* request)
 {
 	OutputDebugFormat(_T("FsMega: onRequestStart type=%d\n"), request->getType());
@@ -82,8 +87,8 @@ void RequestListener::onRequestFinish(MegaApi* api, MegaRequest* request, MegaEr
 {
 	const int type = request->getType();
 	_errorCode = e->getErrorCode();
-	std::wstring errorString = ConstCharToWstring(e->getErrorString());
-	OutputDebugFormat(_T("FsMega: onRequestFinish type=%d errorCode=%d errorString=%s\n"), type, _errorCode, errorString.c_str());
+	_errorMessage = ConstCharToWstring(e->getErrorString());
+	OutputDebugFormat(_T("FsMega: onRequestFinish type=%d errorCode=%d errorString=%s\n"), type, _errorCode, _errorMessage.c_str());
 	SetEvent(_finishedEvent);
 }
 

@@ -14,6 +14,7 @@ public:
 	void WaitAndNotify();
 	bool HasError() const;
 	bool WasAborted() const;
+	std::wstring GetErrorMessage() const;
 
 private:
 	void onRequestStart(mega::MegaApi* api, mega::MegaRequest* request) override;

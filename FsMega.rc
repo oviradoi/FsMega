@@ -61,8 +61,8 @@ IDI_MEGA                ICON                    "mega.ico"
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,3,0,0
- PRODUCTVERSION 1,3,0,0
+ FILEVERSION 1,4,0,0
+ PRODUCTVERSION 1,4,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -128,10 +128,12 @@ BEGIN
     COMBOBOX        IDC_COMBO_USERNAME,7,19,227,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
     EDITTEXT        IDC_EDIT_PASSWORD,7,50,227,14,ES_PASSWORD | ES_AUTOHSCROLL
     CONTROL         "Remember username and password",IDC_REMEMBER,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,71,227,10
+    EDITTEXT        IDC_EDIT_MULTIFACTORKEY,7,100,227,14,ES_AUTOHSCROLL
     DEFPUSHBUTTON   "OK",IDOK,127,142,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,184,142,50,14
     LTEXT           "Username:",IDC_STATIC_USERNAME,7,7,227,8
     LTEXT           "Password:",IDC_STATIC_PASSWORD,7,38,227,8
+    LTEXT           "Multi-factor key:",IDC_STATIC_MULTIFACTORKEY,7,88,227,8
 END
 
 
@@ -165,6 +167,7 @@ BEGIN
     IDS_ABOUTVERSION        "Version {:d}.{:d}.{:d}.{:d}"
     IDS_BUILTUSING          "Built using libmega version {:s}"
     IDS_FETCHNODESERROR     "Fetch nodes error"
+    IDS_LOGINERRORDETAIL    "Login error: {:s}"
 END
 
 #endif    // English (United States) resources

@@ -43,6 +43,10 @@ INT_PTR CALLBACK CLoginDialog::LoginDlgProc(HWND hDlg, UINT message, WPARAM wPar
 			lpThis->UpdatePasswordFromEdit();
 			lpThis->ValidateInput();
 		}
+		else if (HIWORD(wParam) == EN_CHANGE && LOWORD(wParam) == IDC_EDIT_MULTIFACTORKEY)
+		{
+			lpThis->UpdateMultifactorKeyFromEdit();
+		}
 		else if (HIWORD(wParam) == CBN_EDITCHANGE && LOWORD(wParam) == IDC_COMBO_USERNAME)
 		{
 			lpThis->UpdateUsernameFromEdit();
@@ -77,6 +81,7 @@ void CLoginDialog::InitDialog(HWND hDlg)
 
 	_cbUsername = GetDlgItem(hDlg, IDC_COMBO_USERNAME);
 	_edPassword = GetDlgItem(hDlg, IDC_EDIT_PASSWORD);
+	_edMultifactorKey = GetDlgItem(hDlg, IDC_EDIT_MULTIFACTORKEY);
 	_chkRemember = GetDlgItem(hDlg, IDC_REMEMBER);
 	_btnOk = GetDlgItem(hDlg, IDOK);
 
@@ -106,6 +111,11 @@ std::wstring CLoginDialog::GetUsername()
 std::wstring CLoginDialog::GetPassword()
 {
 	return _password;
+}
+
+std::wstring CLoginDialog::GetMultifactorKey()
+{
+	return _multifactorKey;
 }
 
 void CLoginDialog::HandleOk(HWND hDlg)
@@ -216,4 +226,11 @@ void CLoginDialog::UpdatePasswordFromEdit()
 	TCHAR buffer[MAX_STRING_RESOURCE];
 	Edit_GetText(_edPassword, buffer, MAX_STRING_RESOURCE);
 	_password = buffer;
+}
+
+void CLoginDialog::UpdateMultifactorKeyFromEdit()
+{
+	TCHAR buffer[MAX_STRING_RESOURCE];
+	Edit_GetText(_edMultifactorKey, buffer, MAX_STRING_RESOURCE);
+	_multifactorKey = buffer;
 }

@@ -3,6 +3,7 @@
 #include "utils.h"
 
 #include <algorithm>
+#include <format>
 
 #include "AboutDialog.h"
 #include "LoginDialog.h"
@@ -69,16 +70,38 @@ void CFsMega::Connect()
 
 	const string username = WideCharToUtf8(loginDialog.GetUsername());
 	const string password = WideCharToUtf8(loginDialog.GetPassword());
+	const string multifactorKey = WideCharToUtf8(loginDialog.GetMultifactorKey());
 
 	RequestListener loginListener(_progressProc, _pluginNr);
-	_megaApi->login(username.c_str(), password.c_str(), &loginListener);
+	if (multifactorKey.empty())
+	{
+		_megaApi->login(username.c_str(), password.c_str(), &loginListener);
+	}
+	else
+	{
+		_megaApi->multiFactorAuthLogin(username.c_str(), password.c_str(), multifactorKey.c_str(), &loginListener);
+	}
+
 	loginListener.WaitAndNotify();
 	if (loginListener.HasError() || loginListener.WasAborted())
 	{
 		const wstring pluginName = GetStringResource(_pluginInstance, IDS_PLUGINNAME);
-		const wstring loginError = GetStringResource(_pluginInstance, IDS_LOGINERROR);
-		MessageBox(GetActiveWindow(), loginError.c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
-		LogMessage(MSGTYPE_IMPORTANTERROR, loginError.c_str());
+		const wstring errorMessage = loginListener.GetErrorMessage();
+
+		if (!errorMessage.empty())
+		{
+			wstring loginErrorDetail = GetStringResource(_pluginInstance, IDS_LOGINERRORDETAIL);
+			wstring formattedMessage = vformat(loginErrorDetail, make_wformat_args(errorMessage));
+			LogMessage(MSGTYPE_IMPORTANTERROR, formattedMessage.c_str());
+			MessageBox(GetActiveWindow(), formattedMessage.c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);			
+		}
+		else
+		{
+			const wstring loginError = GetStringResource(_pluginInstance, IDS_LOGINERROR);
+			LogMessage(MSGTYPE_IMPORTANTERROR, loginError.c_str());
+			MessageBox(GetActiveWindow(), loginError.c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);			
+		}
+		
 		InitializeMegaApi();
 	}
 	else

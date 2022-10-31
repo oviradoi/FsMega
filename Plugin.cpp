@@ -115,8 +115,9 @@ BOOL __stdcall FsFindNext(HANDLE Hdl, WIN32_FIND_DATA* FindData)
 
 int __stdcall FsExecuteFileW(HWND MainWin, WCHAR* RemoteName, WCHAR* Verb)
 {
+    std::wstring remoteName(RemoteName);
     std::wstring verb(Verb);
-    if (verb == std::wstring(_T("properties")))
+    if (verb == std::wstring(_T("properties")) && remoteName == std::wstring(_T("\\")))
     {
         fsMega->ShowAboutDialog(MainWin);
         return FS_EXEC_OK;

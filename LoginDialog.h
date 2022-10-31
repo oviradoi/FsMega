@@ -14,6 +14,7 @@ public:
 
 	std::wstring GetUsername();
 	std::wstring GetPassword();
+	std::wstring GetMultifactorKey();
 
 private:
 	static INT_PTR CALLBACK LoginDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lparam);
@@ -23,11 +24,13 @@ private:
 	void UpdateUsernameFromEdit();
 	void UpdateUsernameFromCombo();
 	void UpdatePasswordFromEdit();
+	void UpdateMultifactorKeyFromEdit();
 	void GetPasswordFromTc();
 private:
 	HINSTANCE _pluginInstance;
 	HWND _cbUsername;
 	HWND _edPassword;
+	HWND _edMultifactorKey;
 	HWND _chkRemember;
 	HWND _btnOk;
 	int _pluginNr;
@@ -37,6 +40,7 @@ private:
 	std::wstring _iniPath;
 	std::wstring _username;
 	std::wstring _password;
+	std::wstring _multifactorKey;
 	std::vector<std::wstring> _savedUsers;
 	bool _remember;
 };
