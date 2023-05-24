@@ -43,7 +43,9 @@ void CFsMega::InitializeMegaApi()
 		delete _megaApi;
 		_megaApi = nullptr;
 	}
-	_megaApi = new MegaApi(MEGA_API_KEY);
+
+	string tempPath = GetFsMegaTempPath();
+	_megaApi = new MegaApi(MEGA_API_KEY, tempPath.c_str());
 }
 
 void CFsMega::Init(HINSTANCE pluginInstance, int pluginNr, tProgressProcW progressProc, tLogProcW logProc, tRequestProcW requestProc)

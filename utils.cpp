@@ -58,3 +58,13 @@ string LocalPathToMegaPath(const WCHAR* wcLocalPath)
 	std::replace(str.begin(), str.end(), '\\', '/');
 	return str;
 }
+
+string GetFsMegaTempPath()
+{
+	WCHAR tempPath[MAX_PATH];
+	GetTempPath(MAX_PATH, tempPath);
+	PathAppend(tempPath, _T("FsMega"));
+	CreateDirectory(tempPath, NULL);
+
+	return WideCharToUtf8(tempPath);
+}

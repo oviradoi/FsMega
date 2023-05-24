@@ -8,3 +8,4 @@ std::string GetUtf8FileNameFromPath(const WCHAR* wcPath);
 std::wstring GetStringResource(HINSTANCE hInst, UINT resourceId);
 std::wstring ConstCharToWstring(const char* path);
 void OutputDebugFormat(LPCWSTR format, ...);
+std::string GetFsMegaTempPath();
