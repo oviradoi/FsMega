@@ -14,6 +14,9 @@ public:
 	void WaitAndNotify();
 	bool HasError() const;
 	bool WasAborted() const;
+	bool HasAccountInfo() const;
+	long long GetStorageUsed() const;
+	long long GetStorageMax() const;
 	std::wstring GetErrorMessage() const;
 
 private:
@@ -30,6 +33,9 @@ private:
 	int _pluginNr;
 	int _errorCode;
 	bool _aborted;
+	bool _hasAccountInfo;
+	long long _storageUsed;
+	long long _storageMax;
 	std::wstring _errorMessage;
 	volatile int _progress;
 };

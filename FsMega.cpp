@@ -14,7 +14,7 @@
 using namespace std;
 using namespace mega;
 
-const TCHAR DefaultIniFilename[MAX_PATH] = _T("FsMega.ini");
+constexpr TCHAR DefaultIniFilename[MAX_PATH] = _T("FsMega.ini");
 
 CFsMega::CFsMega()
 {
@@ -25,6 +25,12 @@ CFsMega::CFsMega()
 	_requestProc = nullptr;
 	_iniPath = DefaultIniFilename;
 	_megaApi = nullptr;
+	_cryptProc = nullptr;
+	_cryptoNr = 0;
+	_cryptoFlags = 0;
+	_lastQuotaRefresh = 0;
+	_lastStorageUsed = 0;
+	_lastStorageMax = 0;
 }
 
 CFsMega::~CFsMega()
@@ -44,7 +50,7 @@ void CFsMega::InitializeMegaApi()
 		_megaApi = nullptr;
 	}
 
-	string tempPath = GetFsMegaTempPath();
+	const string tempPath = GetFsMegaTempPath();
 	_megaApi = new MegaApi(MEGA_API_KEY, tempPath.c_str());
 }
 
@@ -73,6 +79,10 @@ void CFsMega::Connect()
 	const string username = WideCharToUtf8(loginDialog.GetUsername());
 	const string password = WideCharToUtf8(loginDialog.GetPassword());
 	const string multifactorKey = WideCharToUtf8(loginDialog.GetMultifactorKey());
+
+	_lastQuotaRefresh = 0;
+	_lastStorageMax = 0;
+	_lastStorageUsed = 0;
 
 	RequestListener loginListener(_progressProc, _pluginNr);
 	if (multifactorKey.empty())
@@ -127,13 +137,44 @@ void CFsMega::Connect()
 	}
 }
 
-void CFsMega::Disconnect()
+void CFsMega::Disconnect() const
 {
 	RequestListener logoutListener(_progressProc, _pluginNr);
 	_megaApi->logout(&logoutListener);
 	logoutListener.WaitAndNotify();
 	LogMessage(MSGTYPE_DISCONNECT, _T("Disconnected"));
 }
+
+void CFsMega::LogStorageQuota()
+{
+	// refresh every 60 seconds
+	if (GetTickCount64() - _lastQuotaRefresh > 60000)
+	{
+		RequestListener accountDetailsListener(_progressProc, _pluginNr);
+		_megaApi->getSpecificAccountDetails(true, false, false, -1, &accountDetailsListener);
+		accountDetailsListener.WaitAndNotify();
+
+		if (accountDetailsListener.HasAccountInfo())
+		{
+			_lastQuotaRefresh = GetTickCount64();
+			_lastStorageUsed = accountDetailsListener.GetStorageUsed();
+			_lastStorageMax = accountDetailsListener.GetStorageMax();
+		}
+		else
+		{
+			_lastStorageUsed = _lastStorageMax = 0;
+		}
+	}
+
+	WCHAR wcStorageUsed[MAX_PATH];
+	WCHAR wcStorageMax[MAX_PATH];
+	WCHAR wcStorageFree[MAX_PATH];
+	StrFormatByteSize64(_lastStorageUsed, wcStorageUsed, MAX_PATH);
+	StrFormatByteSize64(_lastStorageMax, wcStorageMax, MAX_PATH);
+	StrFormatByteSize64(_lastStorageMax - _lastStorageUsed, wcStorageFree, MAX_PATH);
+	LogMessage(MSGTYPE_DETAILS, _T("Space free: %s used: %s total: %s"), wcStorageFree, wcStorageUsed, wcStorageMax);
+}
+
 
 Enumerator* CFsMega::GetEnumerator(WCHAR* path)
 {
@@ -145,6 +186,7 @@ Enumerator* CFsMega::GetEnumerator(WCHAR* path)
 	if (_megaApi->isLoggedIn())
 	{
 		LogMessage(MSGTYPE_DETAILS, _T("LIST %s"), path);
+		LogStorageQuota();
 
 		const string megaPath = LocalPathToMegaPath(path);
 		MegaNode* node = _megaApi->getNodeByPath(megaPath.c_str());
@@ -167,6 +209,7 @@ BOOL CFsMega::MkDir(WCHAR* path)
 		RequestListener createFolderListener(_progressProc, _pluginNr);
 		_megaApi->createFolder(strName.c_str(), parent.get(), &createFolderListener);
 		createFolderListener.WaitAndNotify();
+		_lastQuotaRefresh = 0;
 
 		LogMessage(MSGTYPE_OPERATIONCOMPLETE, _T("MKDIR %s"), path);
 
@@ -185,6 +228,7 @@ BOOL CFsMega::Delete(WCHAR* path)
 		RequestListener deleteListener(_progressProc, _pluginNr);
 		_megaApi->remove(node.get(), &deleteListener);
 		deleteListener.WaitAndNotify();
+		_lastQuotaRefresh = 0;
 
 		LogMessage(MSGTYPE_OPERATIONCOMPLETE, _T("DELETE %s"), path);
 		
@@ -194,14 +238,14 @@ BOOL CFsMega::Delete(WCHAR* path)
 	return FALSE;
 }
 
-bool CFsMega::FileExists(WCHAR* path)
+bool CFsMega::FileExists(WCHAR* path) const
 {
 	const string str = LocalPathToMegaPath(path);
 	const unique_ptr<MegaNode> node(_megaApi->getNodeByPath(str.c_str()));
 	return node != nullptr;
 }
 
-unique_ptr<MegaNode> CFsMega::GetParentNode(WCHAR* path)
+unique_ptr<MegaNode> CFsMega::GetParentNode(WCHAR* path) const
 {
 	WCHAR wcPath[TC_MAX_PATH];
 	wcscpy_s(wcPath, path);
@@ -240,6 +284,9 @@ int CFsMega::UploadFile(WCHAR* localName, WCHAR* remoteName, int copyFlags)
 		TransferListener listener(_progressProc, _pluginNr, localName, remoteName);
 		_megaApi->startUpload(strLocalName.c_str(), parent.get(), strRemoteName.c_str(), -1, nullptr, false, false, nullptr, &listener);
 		listener.WaitAndNotify();
+
+		_lastQuotaRefresh = 0;
+
 		if (listener.WasCancelled())
 		{
 			return FS_FILE_USERABORT;
@@ -287,7 +334,7 @@ int CFsMega::DownloadFile(WCHAR* localName, WCHAR* remoteName, int copyFlags)
 	if (node)
 	{
 		TransferListener listener(_progressProc, _pluginNr, localName, remoteName);
-		_megaApi->startDownload(node.get(), strLocalName.c_str(), nullptr, nullptr, false, nullptr, &listener);
+		_megaApi->startDownload(node.get(), strLocalName.c_str(), nullptr, nullptr, false, nullptr, MegaTransfer::COLLISION_CHECK_ASSUMESAME, MegaTransfer::COLLISION_RESOLUTION_OVERWRITE, &listener);
 		listener.WaitAndNotify();
 
 		if (listener.WasCancelled())
@@ -363,12 +410,14 @@ int CFsMega::RenameMove(WCHAR* oldName, WCHAR* newName, bool move, bool overwrit
 
 	listener.WaitAndNotify();
 
+	_lastQuotaRefresh = 0;
+
 	LogMessage(MSGTYPE_OPERATIONCOMPLETE, _T("Rename/move complete: %s -> %s"), oldName, newName);
 
 	return listener.HasError() ? FS_FILE_WRITEERROR : FS_FILE_OK;
 }
 
-void CFsMega::ShowAboutDialog(HWND mainWnd)
+void CFsMega::ShowAboutDialog(HWND mainWnd) const
 {
 	CAboutDialog aboutDialog(_pluginInstance, ConstCharToWstring(_megaApi->getVersion()));
 	aboutDialog.ShowAboutDialog(mainWnd);

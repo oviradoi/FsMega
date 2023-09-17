@@ -19,6 +19,9 @@ RequestListener::RequestListener(tProgressProcW progressProc, int pluginNr)
 	_pluginNr = pluginNr;
 	_progress = 0;
 	_aborted = false;
+	_hasAccountInfo = false;
+	_storageUsed = 0;
+	_storageMax = 0;
 }
 
 RequestListener::~RequestListener()
@@ -63,6 +66,21 @@ bool RequestListener::WasAborted() const
 	return _aborted;
 }
 
+bool RequestListener::HasAccountInfo() const
+{
+	return _hasAccountInfo;
+}
+
+long long RequestListener::GetStorageUsed() const
+{
+	return _storageUsed;
+}
+
+long long RequestListener::GetStorageMax() const
+{
+	return _storageMax;
+}
+
 std::wstring RequestListener::GetErrorMessage() const
 {
 	return _errorMessage;
@@ -85,6 +103,13 @@ void RequestListener::onRequestUpdate(MegaApi* api, MegaRequest* request)
 
 void RequestListener::onRequestFinish(MegaApi* api, MegaRequest* request, MegaError* e)
 {
+	MegaAccountDetails* accountDetails = request->getMegaAccountDetails();
+	if (accountDetails != nullptr)
+	{
+		_hasAccountInfo = true;
+		_storageUsed = accountDetails->getStorageUsed();
+		_storageMax = accountDetails->getStorageMax();
+	}
 	const int type = request->getType();
 	_errorCode = e->getErrorCode();
 	_errorMessage = ConstCharToWstring(e->getErrorString());
