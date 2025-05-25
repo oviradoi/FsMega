@@ -114,7 +114,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
       <ModuleDefinitionFile>FsMega.def</ModuleDefinitionFile>
-      <AdditionalDependencies>cryptopp-static.lib;libsodium.lib;Mega.lib;sqlite3.lib;icudtd.lib;icuind.lib;icuiod.lib;icutud.lib;icuucd.lib;version.lib;zlibd.lib;Winhttp.lib;shlwapi.lib;ws2_32.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDKLibd.lib;libcurl-d.lib;ccronexpr.lib;cryptopp.lib;libsodium.lib;sqlite3.lib;icudtd.lib;icuind.lib;icuiod.lib;icuucd.lib;version.lib;zlibd.lib;Winhttp.lib;shlwapi.lib;ws2_32.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy /Y "$(TargetPath)" "C:\totalcmd\plugins\wfx\FsMega\"</Command>
@@ -136,7 +136,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
       <ModuleDefinitionFile>FsMega.def</ModuleDefinitionFile>
-      <AdditionalDependencies>cryptopp-static.lib;libsodium.lib;Mega.lib;sqlite3.lib;icudtd.lib;icuind.lib;icuiod.lib;icutud.lib;icuucd.lib;version.lib;zlibd.lib;Winhttp.lib;shlwapi.lib;ws2_32.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDKLibd.lib;libcurl-d.lib;ccronexpr.lib;cryptopp.lib;libsodium.lib;sqlite3.lib;icudtd.lib;icuind.lib;icuiod.lib;icuucd.lib;version.lib;zlibd.lib;Winhttp.lib;shlwapi.lib;ws2_32.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy /Y "$(TargetPath)" "C:\totalcmd\plugins\wfx\FsMega\"</Command>
@@ -162,7 +162,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
       <ModuleDefinitionFile>FsMega.def</ModuleDefinitionFile>
-      <AdditionalDependencies>cryptopp-static.lib;libsodium.lib;Mega.lib;sqlite3.lib;icudt.lib;icuin.lib;icuio.lib;icutu.lib;icuuc.lib;version.lib;zlib.lib;Winhttp.lib;shlwapi.lib;ws2_32.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDKLib.lib;libcurl.lib;ccronexpr.lib;cryptopp.lib;libsodium.lib;sqlite3.lib;icudt.lib;icuin.lib;icuio.lib;icuuc.lib;version.lib;zlib.lib;Winhttp.lib;shlwapi.lib;ws2_32.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy /Y "$(TargetPath)" "C:\totalcmd\plugins\wfx\FsMega\"</Command>
@@ -191,7 +191,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
       <ModuleDefinitionFile>FsMega.def</ModuleDefinitionFile>
-      <AdditionalDependencies>cryptopp-static.lib;libsodium.lib;Mega.lib;sqlite3.lib;icudt.lib;icuin.lib;icuio.lib;icutu.lib;icuuc.lib;version.lib;zlib.lib;Winhttp.lib;shlwapi.lib;ws2_32.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDKLib.lib;libcurl.lib;ccronexpr.lib;cryptopp.lib;libsodium.lib;sqlite3.lib;icudt.lib;icuin.lib;icuio.lib;icuuc.lib;version.lib;zlib.lib;Winhttp.lib;shlwapi.lib;ws2_32.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy /Y "$(TargetPath)" "C:\totalcmd\plugins\wfx\FsMega\"</Command>

@@ -282,7 +282,7 @@ int CFsMega::UploadFile(WCHAR* localName, WCHAR* remoteName, int copyFlags)
 	if (parent)
 	{
 		TransferListener listener(_progressProc, _pluginNr, localName, remoteName);
-		_megaApi->startUpload(strLocalName.c_str(), parent.get(), strRemoteName.c_str(), -1, nullptr, false, false, nullptr, &listener);
+		_megaApi->startUpload(strLocalName.c_str(), parent.get(), strRemoteName.c_str(), MegaApi::INVALID_CUSTOM_MOD_TIME, nullptr, false, false, nullptr, &listener);
 		listener.WaitAndNotify();
 
 		_lastQuotaRefresh = 0;
@@ -334,7 +334,7 @@ int CFsMega::DownloadFile(WCHAR* localName, WCHAR* remoteName, int copyFlags)
 	if (node)
 	{
 		TransferListener listener(_progressProc, _pluginNr, localName, remoteName);
-		_megaApi->startDownload(node.get(), strLocalName.c_str(), nullptr, nullptr, false, nullptr, MegaTransfer::COLLISION_CHECK_ASSUMESAME, MegaTransfer::COLLISION_RESOLUTION_OVERWRITE, &listener);
+		_megaApi->startDownload(node.get(), strLocalName.c_str(), nullptr, nullptr, false, nullptr, MegaTransfer::COLLISION_CHECK_ASSUMESAME, MegaTransfer::COLLISION_RESOLUTION_OVERWRITE, false, &listener);
 		listener.WaitAndNotify();
 
 		if (listener.WasCancelled())
