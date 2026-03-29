@@ -1,11 +1,15 @@
 #include "pch.h"
 #include "RequestListener.h"
 
-#include <memory>
+#define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
+#include <Windows.h>
+#include <string>
+#include "tchar.h"
+
+#include "fsplugin.h"
+#include "megaapi.h"
 
 #include "utils.h"
-
-#include <strsafe.h>
 
 using namespace mega;
 

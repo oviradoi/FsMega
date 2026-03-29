@@ -1,6 +1,14 @@
 #include "pch.h"
 #include "utils.h"
 
+#define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
+#include <Windows.h>
+#include <string>
+#include "tchar.h"
+#include "wchar.h"
+#include <strsafe.h>
+#include <cstdarg>
+
 #include <algorithm>
 #include <Shlwapi.h>
 
@@ -9,7 +17,7 @@ using namespace std;
 string WideCharToUtf8(const WCHAR* wcPath)
 {
 	CHAR mbPath[TC_MAX_PATH];
-	WideCharToMultiByte(CP_UTF8, 0, wcPath, static_cast<int>(wcslen(wcPath)) + 1, mbPath, TC_MAX_PATH, nullptr, nullptr);
+	WideCharToMultiByte(CP_UTF8, 0, wcPath, -1, mbPath, TC_MAX_PATH, nullptr, nullptr);
 	return string(mbPath);
 }
 
@@ -36,7 +44,7 @@ wstring GetStringResource(HINSTANCE hInst, UINT resourceId)
 std::wstring ConstCharToWstring(const char* path)
 {
 	WCHAR wcString[MAX_STRING_RESOURCE];
-	MultiByteToWideChar(CP_ACP, 0, path, strlen(path) + 1, wcString, MAX_STRING_RESOURCE);
+	MultiByteToWideChar(CP_ACP, 0, path, -1, wcString, MAX_STRING_RESOURCE);
 	return std::wstring(wcString);
 }
 

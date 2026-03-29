@@ -282,7 +282,14 @@ int CFsMega::UploadFile(WCHAR* localName, WCHAR* remoteName, int copyFlags)
 	if (parent)
 	{
 		TransferListener listener(_progressProc, _pluginNr, localName, remoteName);
-		_megaApi->startUpload(strLocalName.c_str(), parent.get(), strRemoteName.c_str(), MegaApi::INVALID_CUSTOM_MOD_TIME, nullptr, false, false, nullptr, &listener);
+		MegaUploadOptions uploadOptions;
+		uploadOptions.fileName = strRemoteName;
+		uploadOptions.mtime = MegaUploadOptions::INVALID_CUSTOM_MOD_TIME;
+		uploadOptions.appData = nullptr;
+		uploadOptions.isSourceTemporary = false;
+		uploadOptions.startFirst = false;
+		_megaApi->startUpload(strLocalName.c_str(), parent.get(), nullptr, &uploadOptions, &listener);
+
 		listener.WaitAndNotify();
 
 		_lastQuotaRefresh = 0;
